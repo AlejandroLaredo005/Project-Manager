@@ -18,6 +18,6 @@ public class RemoveUserFromProjectRequest {
     public Long getCurrentUserId() { return currentUserId; }
     public void setCurrentUserId(Long currentUserId) { this.currentUserId = currentUserId; }
 
-    public Long getUserIdToAdd() { return userIdToRemove; }
-    public void setUserIdToAdd(Long userIdToRemove) { this.userIdToRemove = userIdToRemove; }
+    public Long getUserIdToRemove() { return userIdToRemove; }
+    public void setUserIdToRemove(Long userIdToRemove) { this.userIdToRemove = userIdToRemove; }
 }
