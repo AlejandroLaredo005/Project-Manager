@@ -16,10 +16,8 @@ public class ChangeTaskStatusRequest {
     }
 
     public Long getProjectMemberId() { return projectMemberId; }
-
     public void setProjectMemberId(Long projectMemberId) { this.projectMemberId = projectMemberId; }
 
     public Status getStatus() { return status; }
-
     public void setStatus(Status status) { this.status = status; }
 }
