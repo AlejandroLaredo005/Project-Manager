@@ -100,7 +100,7 @@ public class UserServiceTest {
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(userToUpdate));
 
-            assertThrows(IllegalArgumentException.class, () ->
+            assertThrows(IllegalStateException.class, () ->
                     userService.updateUsername(1L, "newUsername"));
         }
 
