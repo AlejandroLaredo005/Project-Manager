@@ -63,6 +63,10 @@ public class ProjectService {
         User userToAdd = userRepository.findById(userIdToAdd)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + userIdToAdd));
 
+        if (userToAdd.isDeleted()) {
+            throw new IllegalStateException("El usuario al que queremos añadir está eliminado");
+        }
+
         // Busca project
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado: " + projectId));
@@ -81,12 +85,12 @@ public class ProjectService {
 
         ProjectMember projectMemberToAdd = new ProjectMember(userToAdd, project, projectRole);
 
-        project.addMember(projectMemberToAdd);
-        userToAdd.addProjectMembership(projectMemberToAdd);
+        ProjectMember savedMember = projectMemberRepository.save(projectMemberToAdd);
 
-        projectRepository.save(project);
+        project.addMember(savedMember);
+        userToAdd.addProjectMembership(savedMember);
 
-        return projectMemberToAdd;
+        return savedMember;
     }
 
     @Transactional

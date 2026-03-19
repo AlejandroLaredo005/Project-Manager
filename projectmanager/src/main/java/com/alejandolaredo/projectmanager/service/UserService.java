@@ -67,7 +67,7 @@ public class UserService {
 
         // Comprobamos que el usuario no esté eliminado
         if (user.isDeleted()) {
-            throw new IllegalArgumentException("El usuario está marcado como eliminado");
+            throw new IllegalStateException("El usuario está marcado como eliminado");
         }
 
         // Comprobamos que el usuario no tuviera ya ese nombre previamente

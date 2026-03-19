@@ -58,10 +58,11 @@ public class TaskService {
 
         Task task = new Task(project, title, description, assignee, priority, status, creatorUser);
 
-        project.addTask(task);
-        projectRepository.save(project);
+        Task savedTask = taskRepository.save(task);
 
-        return task;
+        project.addTask(task);
+
+        return savedTask;
     }
 
     @Transactional
