@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotNull;
 public class AddUserToProjectRequest {
 
     @NotNull
-    private Long currentUserId;
-
-    @NotNull
     private Long userIdToAdd;
 
     @NotNull
@@ -17,9 +14,6 @@ public class AddUserToProjectRequest {
     public AddUserToProjectRequest() {
 
     }
-
-    public Long getCurrentUserId() { return currentUserId; }
-    public void setCurrentUserId(Long currentUserId) { this.currentUserId = currentUserId; }
 
     public Long getUserIdToAdd() { return userIdToAdd; }
     public void setUserIdToAdd(Long userIdToAdd) { this.userIdToAdd = userIdToAdd; }

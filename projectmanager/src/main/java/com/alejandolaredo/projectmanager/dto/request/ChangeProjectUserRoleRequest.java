@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotNull;
 public class ChangeProjectUserRoleRequest {
 
     @NotNull
-    private Long adminUserId;
-
-    @NotNull
     private Long userIdToChange;
 
     @NotNull
@@ -17,9 +14,6 @@ public class ChangeProjectUserRoleRequest {
     public ChangeProjectUserRoleRequest() {
 
     }
-
-    public Long getAdminUserId() { return adminUserId; }
-    public void setAdminUserId(Long adminUserId) { this.adminUserId = adminUserId; }
 
     public Long getUserIdToChange() { return userIdToChange; }
     public void setUserIdToChange(Long userIdToChange) { this.userIdToChange = userIdToChange; }

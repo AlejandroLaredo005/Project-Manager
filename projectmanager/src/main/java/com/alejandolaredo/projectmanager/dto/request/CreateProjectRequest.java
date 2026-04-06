@@ -10,9 +10,6 @@ public class CreateProjectRequest {
 
     private String description;
 
-    @NotNull
-    private Long ownerId;
-
     public CreateProjectRequest() {
 
     }
@@ -22,7 +19,4 @@ public class CreateProjectRequest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
-    public Long getOwnerId() { return ownerId; }
-    public void setOwnerId(Long ownerId) { this.ownerId = ownerId; }
 }

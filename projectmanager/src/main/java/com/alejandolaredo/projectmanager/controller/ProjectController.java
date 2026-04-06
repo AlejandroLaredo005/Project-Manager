@@ -5,8 +5,11 @@ import com.alejandolaredo.projectmanager.dto.response.ProjectMemberResponseDTO;
 import com.alejandolaredo.projectmanager.dto.response.ProjectResponseDTO;
 import com.alejandolaredo.projectmanager.model.Project;
 import com.alejandolaredo.projectmanager.model.ProjectMember;
+import com.alejandolaredo.projectmanager.model.User;
+import com.alejandolaredo.projectmanager.repository.UserRepository;
 import com.alejandolaredo.projectmanager.service.ProjectService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,17 +17,25 @@ import org.springframework.web.bind.annotation.*;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final UserRepository userRepository;
 
-    public ProjectController(ProjectService projectService) {
+    public ProjectController(ProjectService projectService, UserRepository userRepository) {
         this.projectService = projectService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
-    public ProjectResponseDTO createProject(@Valid @RequestBody CreateProjectRequest request) {
+    public ProjectResponseDTO createProject(@Valid @RequestBody CreateProjectRequest request,
+                                            Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         Project project = projectService.createProject(
                 request.getName(),
                 request.getDescription(),
-                request.getOwnerId()
+                user.getId()
         );
 
         return ProjectResponseDTO.fromEntity(project);
@@ -32,9 +43,15 @@ public class ProjectController {
 
     @PostMapping("/{projectId}/members")
     public ProjectMemberResponseDTO addUserToProject(@PathVariable Long projectId,
-                                                     @Valid @RequestBody AddUserToProjectRequest request) {
+                                                     @Valid @RequestBody AddUserToProjectRequest request,
+                                                     Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         ProjectMember projectMember = projectService.addUserToProject(
-                request.getCurrentUserId(),
+                user.getId(),
                 request.getUserIdToAdd(),
                 projectId,
                 request.getRole()
@@ -45,9 +62,15 @@ public class ProjectController {
 
     @DeleteMapping("/{projectId}/members")
     public void removeUserFromProject(@PathVariable Long projectId,
-                                      @Valid @RequestBody RemoveUserFromProjectRequest request) {
+                                      @Valid @RequestBody RemoveUserFromProjectRequest request,
+                                      Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         projectService.removeUserFromProject(
-                request.getCurrentUserId(),
+                user.getId(),
                 request.getUserIdToRemove(),
                 projectId
         );
@@ -55,18 +78,29 @@ public class ProjectController {
 
     @PostMapping("/{projectId}/leave")
     public void leaveProject(@PathVariable Long projectId,
-                             @Valid @RequestBody LeaveProjectRequest request) {
+                             Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         projectService.leaveProject(
-                request.getUserId(),
+                user.getId(),
                 projectId
         );
     }
 
     @PatchMapping("/{projectId}/members/role")
     public ProjectMemberResponseDTO changeUserRole(@PathVariable Long projectId,
-                                                   @Valid @RequestBody ChangeProjectUserRoleRequest request) {
+                                                   @Valid @RequestBody ChangeProjectUserRoleRequest request,
+                                                   Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         ProjectMember projectMember = projectService.changeUserRole(
-                request.getAdminUserId(),
+                user.getId(),
                 request.getUserIdToChange(),
                 projectId,
                 request.getRole()
@@ -77,9 +111,15 @@ public class ProjectController {
 
     @PatchMapping("/{projectId}/ownership")
     public ProjectMemberResponseDTO transferOwnership(@PathVariable Long projectId,
-                                                      @Valid @RequestBody TransferProjectOwnership request) {
+                                                      @Valid @RequestBody TransferProjectOwnership request,
+                                                      Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         ProjectMember projectMember = projectService.transferOwnership(
-                request.getCurrentOwnerId(),
+                user.getId(),
                 request.getUserIdToChange(),
                 projectId
         );
@@ -88,7 +128,12 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{projectId}")
-    public void deleteProject(@PathVariable Long projectId, @RequestParam Long ownerId) {
-        projectService.deleteProject(ownerId, projectId);
+    public void deleteProject(@PathVariable Long projectId, Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        projectService.deleteProject(user.getId(), projectId);
     }
 }
