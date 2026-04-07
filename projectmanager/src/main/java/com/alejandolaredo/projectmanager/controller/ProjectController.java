@@ -27,10 +27,7 @@ public class ProjectController {
     @PostMapping
     public ProjectResponseDTO createProject(@Valid @RequestBody CreateProjectRequest request,
                                             Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = getUser(authentication);
 
         Project project = projectService.createProject(
                 request.getName(),
@@ -45,10 +42,7 @@ public class ProjectController {
     public ProjectMemberResponseDTO addUserToProject(@PathVariable Long projectId,
                                                      @Valid @RequestBody AddUserToProjectRequest request,
                                                      Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = getUser(authentication);
 
         ProjectMember projectMember = projectService.addUserToProject(
                 user.getId(),
@@ -64,10 +58,7 @@ public class ProjectController {
     public void removeUserFromProject(@PathVariable Long projectId,
                                       @Valid @RequestBody RemoveUserFromProjectRequest request,
                                       Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = getUser(authentication);
 
         projectService.removeUserFromProject(
                 user.getId(),
@@ -79,10 +70,7 @@ public class ProjectController {
     @PostMapping("/{projectId}/leave")
     public void leaveProject(@PathVariable Long projectId,
                              Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = getUser(authentication);
 
         projectService.leaveProject(
                 user.getId(),
@@ -94,10 +82,7 @@ public class ProjectController {
     public ProjectMemberResponseDTO changeUserRole(@PathVariable Long projectId,
                                                    @Valid @RequestBody ChangeProjectUserRoleRequest request,
                                                    Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = getUser(authentication);
 
         ProjectMember projectMember = projectService.changeUserRole(
                 user.getId(),
@@ -113,10 +98,7 @@ public class ProjectController {
     public ProjectMemberResponseDTO transferOwnership(@PathVariable Long projectId,
                                                       @Valid @RequestBody TransferProjectOwnership request,
                                                       Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = getUser(authentication);
 
         ProjectMember projectMember = projectService.transferOwnership(
                 user.getId(),
@@ -129,11 +111,15 @@ public class ProjectController {
 
     @DeleteMapping("/{projectId}")
     public void deleteProject(@PathVariable Long projectId, Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = getUser(authentication);
 
         projectService.deleteProject(user.getId(), projectId);
+    }
+
+    private User getUser(Authentication authentication) {
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 }

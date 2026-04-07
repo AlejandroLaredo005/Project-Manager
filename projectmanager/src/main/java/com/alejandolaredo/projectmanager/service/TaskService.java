@@ -66,7 +66,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task changeStatus(Long taskId, Long projectMemberId, Status status) {
+    public Task changeStatus(Long taskId, Long currentUserId, Status status) {
         // Comprobamos que el estado no sea nulo
         if (status == null) {
             throw new IllegalArgumentException("El estado es obligatorio");
@@ -80,11 +80,8 @@ public class TaskService {
             throw new IllegalArgumentException("La tarea ya tenía ese estado");
         }
 
-        // Comprobamos que el projectMember exista
-        ProjectMember projectMember = getProjectMember(projectMemberId);
-
-        // Comprobamos que la tarea y el miembro pertenezcan al mismo proyecto
-        validateSameProject(task, projectMember);
+        // Comprobamos que el projectMember exista y estén en el mismo proyecto
+        ProjectMember projectMember = getProjectMember(currentUserId, task);
 
         // Comprobamos si es admin o miembro
         if (projectMember.getRole() == ProjectRole.MEMBER) {
@@ -105,7 +102,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task assignTask (Long taskId, Long assignerId, Long assignedId) {
+    public Task assignTask (Long taskId, Long currentUserId, Long assignedId) {
         // Comprobamos si la tarea existe
         Task task = getTask(taskId);
 
@@ -118,15 +115,10 @@ public class TaskService {
         validateTaskNotClosed(task);
 
         // Buscamos al miembro que quiere asignarle la tarea a otro
-        ProjectMember assigner = getProjectMember(assignerId);
-
-        // Comprobamos que la tarea y el assigner sean del mismo proyecto
-        if (!task.getProject().getId().equals(assigner.getProject().getId())) {
-            throw new IllegalArgumentException("El assigner y la tarea no pertenecen al mismo proyecto");
-        }
+        ProjectMember assigner = getProjectMember(currentUserId, task);
 
         // Comprobamos si el usuario se está intentando asignar la tarea a sí mismo
-        boolean autoAssign = assignerId.equals(assignedId);
+        boolean autoAssign = assigner.getId().equals(assignedId);
 
         // Lógica si el usuario es un miembro
         if (assigner.getRole() == ProjectRole.MEMBER) {
@@ -161,7 +153,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task unassignTask (Long taskId, Long projectMemberId) {
+    public Task unassignTask (Long taskId, Long currentUserId) {
         // Comprobamos si la tarea existe
         Task task = getTask(taskId);
 
@@ -174,10 +166,7 @@ public class TaskService {
         }
 
         // Comprobamos que el projectMember exista y este en el mismo proyecto que la tarea
-        ProjectMember projectMember = getProjectMember(projectMemberId);
-
-        // Comprobamos que la tarea y el miembro sean del mismo proyecto
-        validateSameProject(task, projectMember);
+        ProjectMember projectMember = getProjectMember(currentUserId, task);
 
         // Comprobamos si el projectMember es admin o member
         if (projectMember.getRole() == ProjectRole.ADMIN) {
@@ -191,13 +180,13 @@ public class TaskService {
             throw new IllegalArgumentException("Un miembro solo puede desasignar una tarea que él tenga asignada");
         }
 
-        // Si la tiene asignada la desasignamos
+        // Sí la tiene asignada la desAsignamos
         task.setAssignee(null);
         return task;
     }
 
     @Transactional
-    public Task updateTask (Long taskId, String title, String description, Long updaterId) {
+    public Task updateTask (Long taskId, String title, String description, Long currentUserId) {
         // Comprobamos que el título esté bien escrito
         if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("El título de la tarea no puede estar vacío ni ser nulo");
@@ -209,11 +198,8 @@ public class TaskService {
         // Comprobamos que la tarea no esté cerrada
         validateTaskNotClosed(task);
 
-        // Comprobamos que el projectMember exista
-        ProjectMember updater = getProjectMember(updaterId);
-
-        // Comprobamos que la tarea y el que la intenta cambiar pertenecen al mismo proyecto
-        validateSameProject(task, updater);
+        // Comprobamos que el projectMember exista y estén en el mismo proyecto
+        ProjectMember updater = getProjectMember(currentUserId, task);
 
         // Comprobamos que el que está intentando cambiar la tarea sea admin
         validateAdmin(updater);
@@ -226,7 +212,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task changePriority (Long taskId, Long projectMemberId, Priority priority) {
+    public Task changePriority (Long taskId, Long currentUserId, Priority priority) {
         // Comprobamos que el priority no sea nulo
         if (priority == null) {
             throw new IllegalArgumentException("La prioridad no puede ser nula");
@@ -243,11 +229,8 @@ public class TaskService {
             throw new IllegalArgumentException("La tarea ya tenía esa prioridad");
         }
 
-        // Buscamos el projectMember
-        ProjectMember projectMember = getProjectMember(projectMemberId);
-
-        // Comprobamos que la tarea y el projectMember sean del mismo proyecto
-        validateSameProject(task, projectMember);
+        // Comprobamos que el projectMember exista y estén en el mismo proyecto
+        ProjectMember projectMember = getProjectMember(currentUserId, task);
 
         // Solo un admin puede cambiar la prioridad de una tarea
         validateAdmin(projectMember);
@@ -258,15 +241,12 @@ public class TaskService {
     }
 
     @Transactional
-    public void deleteTask (Long taskId, Long projectMemberId) {
+    public void deleteTask (Long taskId, Long currentUserId) {
         // Buscamos la tarea
         Task task = getTask(taskId);
 
-        // Buscamos el projectMember
-        ProjectMember projectMember = getProjectMember(projectMemberId);
-
-        // Comprobamos que la tarea y el projectMember sean del mismo proyecto
-        validateSameProject(task, projectMember);
+        // Comprobamos que el projectMember exista y este en el mismo proyecto que la tarea
+        ProjectMember projectMember = getProjectMember(currentUserId, task);
 
         // Solo un admin puede borrar una tarea
         validateAdmin(projectMember);
@@ -290,10 +270,10 @@ public class TaskService {
                 .orElseThrow(() -> new EntityNotFoundException("No existe un miembro con el id " + projectMemberId));
     }
 
-    private static void validateSameProject(Task task, ProjectMember projectMember) {
-        if (!task.getProject().getId().equals(projectMember.getProject().getId())) {
-            throw new IllegalArgumentException("El projectMember y la tarea no pertenecen al mismo proyecto");
-        }
+    private ProjectMember getProjectMember(Long currentUserId, Task task) {
+        return projectMemberRepository
+                .findByUserIdAndProjectId(currentUserId, task.getProject().getId())
+                .orElseThrow(() -> new IllegalStateException("El usuario y la tarea no están en el mismo proyecto"));
     }
 
     private static void validateAdmin(ProjectMember projectMember) {

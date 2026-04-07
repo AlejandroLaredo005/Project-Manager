@@ -10,9 +10,6 @@ public class UpdateTaskRequest {
 
     private String description;
 
-    @NotNull
-    private Long updaterId;
-
     public UpdateTaskRequest() {
 
     }
@@ -22,7 +19,4 @@ public class UpdateTaskRequest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
-    public Long getUpdaterId() { return updaterId; }
-    public void setUpdaterId(Long updaterId) { this.updaterId = updaterId; }
 }

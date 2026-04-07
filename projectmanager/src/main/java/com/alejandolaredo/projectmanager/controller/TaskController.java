@@ -3,8 +3,11 @@ package com.alejandolaredo.projectmanager.controller;
 import com.alejandolaredo.projectmanager.dto.request.*;
 import com.alejandolaredo.projectmanager.dto.response.TaskResponseDTO;
 import com.alejandolaredo.projectmanager.model.Task;
+import com.alejandolaredo.projectmanager.model.User;
+import com.alejandolaredo.projectmanager.repository.UserRepository;
 import com.alejandolaredo.projectmanager.service.TaskService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,13 +15,18 @@ import org.springframework.web.bind.annotation.*;
 public class TaskController {
 
     private final TaskService taskService;
+    private final UserRepository userRepository;
 
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskService taskService, UserRepository userRepository) {
         this.taskService = taskService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
-    public TaskResponseDTO createTask(@Valid @RequestBody CreateTaskRequest request) {
+    public TaskResponseDTO createTask(@Valid @RequestBody CreateTaskRequest request,
+                                      Authentication authentication) {
+        User user = getUser(authentication);
+
         Task task = taskService.createTask(
                 request.getProjectId(),
                 request.getTitle(),
@@ -26,7 +34,7 @@ public class TaskController {
                 request.getAssigneeId(),
                 request.getPriority(),
                 request.getStatus(),
-                request.getCreatedById()
+                user.getId()
         );
 
         return TaskResponseDTO.fromEntity(task);
@@ -34,10 +42,13 @@ public class TaskController {
 
     @PatchMapping("/{taskId}/status")
     public TaskResponseDTO changeStatus(@PathVariable Long taskId,
-                                        @Valid @RequestBody ChangeTaskStatusRequest request) {
+                                        @Valid @RequestBody ChangeTaskStatusRequest request,
+                                        Authentication authentication) {
+        User user = getUser(authentication);
+
         Task task = taskService.changeStatus(
                 taskId,
-                request.getProjectMemberId(),
+                user.getId(),
                 request.getStatus()
         );
 
@@ -46,10 +57,13 @@ public class TaskController {
 
     @PatchMapping("/{taskId}/priority")
     public TaskResponseDTO changePriority(@PathVariable Long taskId,
-                                          @Valid @RequestBody ChangeTaskPriorityRequest request) {
+                                          @Valid @RequestBody ChangeTaskPriorityRequest request,
+                                          Authentication authentication) {
+        User user = getUser(authentication);
+
         Task task = taskService.changePriority(
                 taskId,
-                request.getProjectMemberId(),
+                user.getId(),
                 request.getPriority()
         );
 
@@ -58,12 +72,15 @@ public class TaskController {
 
     @PatchMapping("/{taskId}")
     public TaskResponseDTO updateTask(@PathVariable Long taskId,
-                                      @Valid @RequestBody UpdateTaskRequest request) {
+                                      @Valid @RequestBody UpdateTaskRequest request,
+                                      Authentication authentication) {
+        User user = getUser(authentication);
+
         Task task = taskService.updateTask(
                 taskId,
                 request.getTitle(),
                 request.getDescription(),
-                request.getUpdaterId()
+                user.getId()
         );
 
         return TaskResponseDTO.fromEntity(task);
@@ -71,10 +88,13 @@ public class TaskController {
 
     @PatchMapping("/{taskId}/assign")
     public TaskResponseDTO assignTask(@PathVariable Long taskId,
-                                      @Valid @RequestBody AssignTaskRequest request) {
+                                      @Valid @RequestBody AssignTaskRequest request,
+                                      Authentication authentication) {
+        User user = getUser(authentication);
+
         Task task = taskService.assignTask(
                 taskId,
-                request.getAssignerId(),
+                user.getId(),
                 request.getAssignedId()
         );
 
@@ -83,10 +103,12 @@ public class TaskController {
 
     @PatchMapping("/{taskId}/unassign")
     public TaskResponseDTO unassignTask(@PathVariable Long taskId,
-                                        @Valid @RequestBody UnassignTaskRequest request) {
+                                        Authentication authentication) {
+        User user = getUser(authentication);
+
         Task task = taskService.unassignTask(
                 taskId,
-                request.getProjectMemberId()
+                user.getId()
         );
 
         return TaskResponseDTO.fromEntity(task);
@@ -94,7 +116,16 @@ public class TaskController {
 
     @DeleteMapping("/{taskId}")
     public void deleteTask(@PathVariable Long taskId,
-                           @RequestParam Long projectMemberId) {
-        taskService.deleteTask(taskId, projectMemberId);
+                           Authentication authentication) {
+        User user = getUser(authentication);
+
+        taskService.deleteTask(taskId, user.getId());
+    }
+
+    private User getUser(Authentication authentication) {
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 }

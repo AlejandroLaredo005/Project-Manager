@@ -23,9 +23,6 @@ public class CreateTaskRequest {
 
     private Long assigneeId;
 
-    @NotNull
-    private Long createdById;
-
     public CreateTaskRequest() {
 
     }
@@ -47,7 +44,4 @@ public class CreateTaskRequest {
 
     public Long getAssigneeId() { return assigneeId; }
     public void setAssigneeId(Long assigneeId) { this.assigneeId = assigneeId; }
-
-    public Long getCreatedById() { return createdById; }
-    public void setCreatedById(Long createdById) { this.createdById = createdById; }
 }
