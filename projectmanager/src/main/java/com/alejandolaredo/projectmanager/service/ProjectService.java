@@ -272,4 +272,22 @@ public class ProjectService {
         // Borramos el proyecto
         projectRepository.delete(project);
     }
+
+    @Transactional(readOnly = true)
+    public List<Project> getUserProjects(Long userId) {
+        // Buscamos al usuario del cual queremos sus proyectos
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + userId));
+
+        // Comprobamos que el usuario no esté eliminado
+        if (user.isDeleted()) {
+            throw new IllegalStateException("El usuario no existe");
+        }
+
+        // Obtenemos sus proyectos
+        return user.getProjectMemberships()
+                .stream()
+                .map(ProjectMember::getProject)
+                .toList();
+    }
 }

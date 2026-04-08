@@ -12,6 +12,8 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/projects")
 public class ProjectController {
@@ -114,6 +116,16 @@ public class ProjectController {
         User user = getUser(authentication);
 
         projectService.deleteProject(user.getId(), projectId);
+    }
+
+    @GetMapping("/my")
+    public List<ProjectResponseDTO> getMyProjects(Authentication authentication) {
+        User user = getUser(authentication);
+
+        return projectService.getUserProjects(user.getId())
+                .stream()
+                .map(ProjectResponseDTO::fromEntity)
+                .toList();
     }
 
     private User getUser(Authentication authentication) {
