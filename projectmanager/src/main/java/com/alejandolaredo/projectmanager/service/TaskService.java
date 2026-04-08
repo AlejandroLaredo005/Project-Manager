@@ -274,6 +274,16 @@ public class TaskService {
         return project.getTasks();
     }
 
+    @Transactional(readOnly = true)
+    public List<Task> getMyTasksFromProject(Long projectId, Long userId) {
+        // Comprobamos que el usuario esté en ese proyecto y que el proyecto exista
+        ProjectMember membership = projectMemberRepository.findByUserIdAndProjectId(userId, projectId)
+                .orElseThrow(() -> new EntityNotFoundException("El usuario no está en el proyecto"));
+
+        // Devolvemos sus tareas
+        return taskRepository.findByAssignee_IdAndProject_Id(membership.getId(), projectId);
+    }
+
     // Métodos privados para refactorización
     private Task getTask(Long taskId) {
         return taskRepository.findById(taskId)

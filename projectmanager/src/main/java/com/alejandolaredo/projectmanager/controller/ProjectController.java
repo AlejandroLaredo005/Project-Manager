@@ -147,10 +147,21 @@ public class ProjectController {
 
     @GetMapping("/{projectId}/tasks")
     public List<TaskResponseDTO> getTasksFromProject(@PathVariable Long projectId,
-                                                              Authentication authentication) {
+                                                     Authentication authentication) {
         User user = getUser(authentication);
 
         return taskService.getTasksFromProject(projectId, user.getId())
+                .stream()
+                .map(TaskResponseDTO::fromEntity)
+                .toList();
+    }
+
+    @GetMapping("/{projectId}/tasks/assigned-to-me")
+    public List<TaskResponseDTO> getMyTasksFromProject(@PathVariable Long projectId,
+                                                       Authentication authentication) {
+        User user = getUser(authentication);
+
+        return taskService.getMyTasksFromProject(projectId, user.getId())
                 .stream()
                 .map(TaskResponseDTO::fromEntity)
                 .toList();
