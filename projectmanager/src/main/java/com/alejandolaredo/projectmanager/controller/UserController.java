@@ -4,8 +4,10 @@ import com.alejandolaredo.projectmanager.dto.request.CreateUserRequest;
 import com.alejandolaredo.projectmanager.dto.request.UpdateUsernameRequest;
 import com.alejandolaredo.projectmanager.dto.response.UserResponseDTO;
 import com.alejandolaredo.projectmanager.model.User;
+import com.alejandolaredo.projectmanager.repository.UserRepository;
 import com.alejandolaredo.projectmanager.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserRepository userRepository) {
         this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
@@ -29,19 +33,30 @@ public class UserController {
         return UserResponseDTO.fromEntity(user);
     }
 
-    @PatchMapping("/{userId}/username")
-    public UserResponseDTO updateUsername(@PathVariable Long userId,
+    @PatchMapping("/username")
+    public UserResponseDTO updateUsername(Authentication authentication,
                                           @Valid @RequestBody UpdateUsernameRequest request) {
-        User user = userService.updateUsername(
-                userId,
+        User user = getUser(authentication);
+
+        User updatedUser = userService.updateUsername(
+                user.getId(),
                 request.getNewUsername()
         );
 
-        return UserResponseDTO.fromEntity(user);
+        return UserResponseDTO.fromEntity(updatedUser);
     }
 
-    @DeleteMapping("/{userId}")
-    public void deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
+    @DeleteMapping
+    public void deleteUser(Authentication authentication) {
+        User user = getUser(authentication);
+
+        userService.deleteUser(user.getId());
+    }
+
+    private User getUser(Authentication authentication) {
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 }
