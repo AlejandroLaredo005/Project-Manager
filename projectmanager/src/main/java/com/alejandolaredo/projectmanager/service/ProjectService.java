@@ -9,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -289,5 +290,18 @@ public class ProjectService {
                 .stream()
                 .map(ProjectMember::getProject)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProjectMember> getProjectMembers(Long projectId, Long userId) {
+        // Comprobamos que el usuario esté en ese proyecto y que el proyecto exista
+        ProjectMember membership = projectMemberRepository.findByUserIdAndProjectId(userId, projectId)
+                .orElseThrow(() -> new EntityNotFoundException("El usuario no está en el proyecto"));
+
+        // Obtenemos el proyecto
+        Project project = membership.getProject();
+
+        // Obtenemos los miembros y los devolvemos
+        return new ArrayList<>(project.getMembers());
     }
 }

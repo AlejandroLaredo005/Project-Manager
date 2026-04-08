@@ -128,6 +128,17 @@ public class ProjectController {
                 .toList();
     }
 
+    @GetMapping("/{projectId}/members")
+    public List<ProjectMemberResponseDTO> getProjectMembers(@PathVariable Long projectId,
+                                                            Authentication authentication) {
+        User user = getUser(authentication);
+
+        return projectService.getProjectMembers(projectId, user.getId())
+                .stream()
+                .map(ProjectMemberResponseDTO::fromEntity)
+                .toList();
+    }
+
     private User getUser(Authentication authentication) {
         String email = authentication.getName();
 
