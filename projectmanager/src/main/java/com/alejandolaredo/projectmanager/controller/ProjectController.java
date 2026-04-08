@@ -3,11 +3,13 @@ package com.alejandolaredo.projectmanager.controller;
 import com.alejandolaredo.projectmanager.dto.request.*;
 import com.alejandolaredo.projectmanager.dto.response.ProjectMemberResponseDTO;
 import com.alejandolaredo.projectmanager.dto.response.ProjectResponseDTO;
+import com.alejandolaredo.projectmanager.dto.response.TaskResponseDTO;
 import com.alejandolaredo.projectmanager.model.Project;
 import com.alejandolaredo.projectmanager.model.ProjectMember;
 import com.alejandolaredo.projectmanager.model.User;
 import com.alejandolaredo.projectmanager.repository.UserRepository;
 import com.alejandolaredo.projectmanager.service.ProjectService;
+import com.alejandolaredo.projectmanager.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +22,14 @@ public class ProjectController {
 
     private final ProjectService projectService;
     private final UserRepository userRepository;
+    private final TaskService taskService;
 
-    public ProjectController(ProjectService projectService, UserRepository userRepository) {
+    public ProjectController(ProjectService projectService,
+                             UserRepository userRepository,
+                             TaskService taskService) {
         this.projectService = projectService;
         this.userRepository = userRepository;
+        this.taskService = taskService;
     }
 
     @PostMapping
@@ -136,6 +142,17 @@ public class ProjectController {
         return projectService.getProjectMembers(projectId, user.getId())
                 .stream()
                 .map(ProjectMemberResponseDTO::fromEntity)
+                .toList();
+    }
+
+    @GetMapping("/{projectId}/tasks")
+    public List<TaskResponseDTO> getTasksFromProject(@PathVariable Long projectId,
+                                                              Authentication authentication) {
+        User user = getUser(authentication);
+
+        return taskService.getTasksFromProject(projectId, user.getId())
+                .stream()
+                .map(TaskResponseDTO::fromEntity)
                 .toList();
     }
 

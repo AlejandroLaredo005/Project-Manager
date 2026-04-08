@@ -8,6 +8,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class TaskService {
 
@@ -257,6 +259,19 @@ public class TaskService {
         // Eliminamos la tarea
         project.removeTask(task);
         projectRepository.save(project);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Task> getTasksFromProject(Long projectId, Long userId) {
+        // Comprobamos que el usuario esté en ese proyecto y que el proyecto exista
+        ProjectMember membership = projectMemberRepository.findByUserIdAndProjectId(userId, projectId)
+                .orElseThrow(() -> new EntityNotFoundException("El usuario no está en el proyecto"));
+
+        // Obtenemos el proyecto
+        Project project = membership.getProject();
+
+        // Devolvemos las tareas
+        return project.getTasks();
     }
 
     // Métodos privados para refactorización
