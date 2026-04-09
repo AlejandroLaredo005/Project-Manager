@@ -262,7 +262,7 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<Task> getTasksFromProject(Long projectId, Long userId, Status status) {
+    public List<Task> getTasksFromProject(Long projectId, Long userId, Status status, Priority priority) {
         // Comprobamos que el usuario esté en ese proyecto y que el proyecto exista
         ProjectMember membership = projectMemberRepository.findByUserIdAndProjectId(userId, projectId)
                 .orElseThrow(() -> new EntityNotFoundException("El usuario no está en el proyecto"));
@@ -270,9 +270,19 @@ public class TaskService {
         // Obtenemos el proyecto
         Project project = membership.getProject();
 
+        // Si el estado y la prioridad no son nulos, filtramos
+        if (status != null && priority != null) {
+            return taskRepository.findByProject_IdAndStatusAndPriority(projectId, status, priority);
+        }
+
         // Si el estado no es nulo, filtramos
         if (status != null) {
             return taskRepository.findByProject_IdAndStatus(projectId, status);
+        }
+
+        // Si la prioridad no es nula, filtramos
+        if (priority != null) {
+            return taskRepository.findByProject_IdAndPriority(projectId, priority);
         }
 
         // Devolvemos las tareas
