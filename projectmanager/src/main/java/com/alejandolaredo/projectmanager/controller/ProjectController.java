@@ -6,6 +6,7 @@ import com.alejandolaredo.projectmanager.dto.response.ProjectResponseDTO;
 import com.alejandolaredo.projectmanager.dto.response.TaskResponseDTO;
 import com.alejandolaredo.projectmanager.model.Project;
 import com.alejandolaredo.projectmanager.model.ProjectMember;
+import com.alejandolaredo.projectmanager.model.Status;
 import com.alejandolaredo.projectmanager.model.User;
 import com.alejandolaredo.projectmanager.repository.UserRepository;
 import com.alejandolaredo.projectmanager.service.ProjectService;
@@ -147,10 +148,11 @@ public class ProjectController {
 
     @GetMapping("/{projectId}/tasks")
     public List<TaskResponseDTO> getTasksFromProject(@PathVariable Long projectId,
-                                                     Authentication authentication) {
+                                                     Authentication authentication,
+                                                     @RequestParam(required = false) Status status) {
         User user = getUser(authentication);
 
-        return taskService.getTasksFromProject(projectId, user.getId())
+        return taskService.getTasksFromProject(projectId, user.getId(), status)
                 .stream()
                 .map(TaskResponseDTO::fromEntity)
                 .toList();
